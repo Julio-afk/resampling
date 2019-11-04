@@ -6,10 +6,90 @@ Created on Tue Oct 29 10:36:26 2019
 """
 
 import pandas as pd
-import numpy as np
 import time
+import re
+from gc import collect
+
 path = 'C:/Users/e054040/Desktop/projects/data/20191018/dump/TEPR_ASE_dump_RgoM_es_Thu.csv'
 path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
+
+
+def extract_name(factor_list):
+    position = factor_list[0].split(',').index('Name(property;string)')
+    txt = factor_list[1].split(',')[position]
+    return txt
+
+def sub_commas(factor_list):
+    txt = [re.sub(',{2,10}', ',',x) for x in factor_list]
+    return txt
+
+def split_line(factor_list):
+    txt = [x.split(',')[-3:] for x in factor_list]
+    return txt
+
+def add_factor(factor_list, factor_name):
+    txt = [[[x] + y for y in v] for x,v in zip(factor_name, factor_list)]
+    return txt 
+
+def parse_dump_ir(path):
+    s_ini = time.time()
+    input_file = open(path)
+    text = input_file.readlines()
+    s = time.time()
+    text = [x[:-1] for x in text ]
+    
+    chunks = [x for x,y in enumerate(text) if 'BeginDate' in y]
+    chunks += [len(text)]
+    
+    print("time taken: ", time.time()-s)
+    
+    #get index of headers of IR risk factors
+    chunks_ir = [x-1 for x,y in enumerate(text) if 'ir_data' in y]
+    
+    #Create slice to filter ir factors
+    slice_ir = [slice(chunks_ir[i],chunks[chunks.index(chunks_ir[i])+1]) for i in range(len(chunks_ir))]
+    s = time.time()
+    text = [text[x] for x in slice_ir]
+    print('time with slices: ', time.time()-s)
+    
+    #Get name of risk factors
+    s= time.time()
+    nombres = [extract_name(x) for x in text]
+    print('time extracting name: ', time.time()-s)
+    
+    #sub commas and splitting into list 
+    s= time.time()
+    txt = [split_line(sub_commas(x)) for x in text]
+    print('time sub commas, split line: ', time.time()-s)
+    del text
+    collect()
+    
+    #Add rf name
+    txt = add_factor(txt, nombres)
+    
+    #from [[[]]] to [[]]
+    txt = [x for v in txt for x in v]
+    
+    txt = pd.DataFrame(txt)
+    
+    txt.columns = txt.iloc[0,:].tolist()
+    txt.columns = txt.columns.str.replace(r'\(.*?\)', '')
+        
+    txt.Value = pd.to_numeric(txt.Value, errors = 'coerce')
+    txt.Term = pd.to_numeric(txt.Term, errors = 'coerce')
+    txt.Date = pd.to_datetime(txt.Date, errors = 'coerce')
+    txt = txt.dropna(axis='index', how ='all')
+    txt = txt.reset_index(drop=True)
+    txt.columns = ['Name', 'Date', 'Term','Value']
+    print('time elapsed: ', (time.time() - s_ini)/60 , ' minutes')
+    return txt
+    
+
+#txt = parse_dump_ir(path_casa)
+
+
+
+
 #
 #input_file = open(path_casa)
 #text = input_file.readlines()
@@ -93,83 +173,3 @@ path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
 # =============================================================================
 # 
 # =============================================================================
-import re
-import time
-import pandas as pd
-from gc import collect
-
-
-def extract_name(factor_list):
-    position = factor_list[0].split(',').index('Name(property;string)')
-    txt = factor_list[1].split(',')[position]
-    return txt
-
-def sub_commas(factor_list):
-    txt = [re.sub(',{2,10}', ',',x) for x in factor_list]
-    return txt
-
-def split_line(factor_list):
-    txt = [x.split(',')[-3:] for x in factor_list]
-    return txt
-
-def add_factor(factor_list, factor_name):
-    txt = [[[x] + y for y in v] for x,v in zip(factor_name, factor_list)]
-    return txt 
-
-def parse_dump_ir(path):
-    s_ini = time.time()
-    input_file = open(path)
-    text = input_file.readlines()
-    s = time.time()
-    text = [x[:-1] for x in text ]
-    
-    chunks = [x for x,y in enumerate(text) if 'BeginDate' in y]
-    chunks += [len(text)]
-    
-    print("time taken: ", time.time()-s)
-    
-    #get index of headers of IR risk factors
-    chunks_ir = [x-1 for x,y in enumerate(text) if 'ir_data' in y]
-    
-    #Create slice to filter ir factors
-    slice_ir = [slice(chunks_ir[i],chunks[chunks.index(chunks_ir[i])+1]) for i in range(len(chunks_ir))]
-    s = time.time()
-    text = [text[x] for x in slice_ir]
-    print('time with slices: ', time.time()-s)
-    
-    #Get name of risk factors
-    s= time.time()
-    nombres = [extract_name(x) for x in text]
-    print('time extracting name: ', time.time()-s)
-    
-    #sub commas and splitting into list 
-    s= time.time()
-    txt = [split_line(sub_commas(x)) for x in text]
-    print('time sub commas, split line: ', time.time()-s)
-    del text
-    collect()
-    
-    #Add rf name
-    txt = add_factor(txt, nombres)
-    
-    #from [[[]]] to [[]]
-    txt = [x for v in txt for x in v]
-    
-    txt = pd.DataFrame(txt)
-    
-    txt.columns = txt.iloc[0,:].tolist()
-    txt.columns = txt.columns.str.replace(r'\(.*?\)', '')
-        
-    txt.Value = pd.to_numeric(txt.Value, errors = 'coerce')
-    txt.Term = pd.to_numeric(txt.Term, errors = 'coerce')
-    txt.Date = pd.to_datetime(txt.Date, errors = 'coerce')
-    txt = txt.dropna(axis='index', how ='all')
-    txt = txt.reset_index(drop=True)
-    txt.columns = ['Name', 'Date', 'Term','Value']
-    print('time elapsed: ', (time.time() - s_ini)/60 , ' minutes')
-    return txt
-    
-
-txt = parse_dump_ir(path_casa)
-
-
