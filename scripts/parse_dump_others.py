@@ -96,7 +96,7 @@ s = time.time()
 mk, eq, fx, com, iv = [parse_dump_others(path, x) for x in data_types]
 print('total time elapsed: ', (time.time()-s)/60, ' minutes')
 
-cols_na = ['Moneyness', 'Underlying Term']
+cols_na = ['moneyness_number', 'terms_validity_days_type']
 
 iv.loc[:,cols_na]  = iv.loc[:,cols_na].fillna(0).apply(lambda x: x.astype(float))
 
@@ -109,11 +109,11 @@ def save_files(files, data_types, path):
     [x.to_csv(path + y + '.csv', index= False) for x,y in zip(files, data_types)]
     return
 
-save_files([mk, eq, fx, com, iv], data_types, path_to_save)
+save_files([iv], ['iv'], path_to_save)
 
 # =============================================================================
 # pruebas
-iv, list_rfs = parse_dump_others(path, 'iv')
+i = parse_dump_others(path, 'iv')
 
 j = iv.iloc[:10000,:].pivot_table(index = ['Name', 'Moneyness', 'Underlying Term', 'Option Term'], columns = 'Date', values = 'Value')
 # =============================================================================

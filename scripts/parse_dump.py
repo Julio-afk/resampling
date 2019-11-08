@@ -85,12 +85,25 @@ def parse_dump_ir(path):
     return txt
     
 
-#txt = parse_dump_ir(path_casa)
+txt = parse_dump_ir(path)
+a = txt.isnull().sum(axis=1)>1
+txt = txt.loc[~a]
+
+
+tenors = pd.Series(txt.Term.astype(int).unique())
+
+
+# =============================================================================
+# dict_tenors = pd.read_csv('dict_tenors.csv', sep = ';')
+# dict_tenors = dict_tenors.drop_duplicates()
+# tenors[~tenors.isin(dict_tenors.iv)]
+# 
+# dict_tenors = dict_tenors.append(pd.DataFrame({'iv':[2]})).sort_values('iv').reset_index(drop=True)
+# dict_tenors.to_csv('diccionario.csv', index=False)
+# =============================================================================
 
 
 
-
-#
 #input_file = open(path_casa)
 #text = input_file.readlines()
 #s = time.time()
