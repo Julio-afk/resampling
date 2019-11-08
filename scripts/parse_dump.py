@@ -11,7 +11,7 @@ import re
 from gc import collect
 
 path = 'C:/Users/e054040/Desktop/projects/data/20191018/dump/TEPR_ASE_dump_RgoM_es_Thu.csv'
-path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
+#path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
 
 
 def extract_name(factor_list):
@@ -81,16 +81,12 @@ def parse_dump_ir(path):
     txt = txt.dropna(axis='index', how ='all')
     txt = txt.reset_index(drop=True)
     txt.columns = ['Name', 'Date', 'Term','Value']
+    
+    missing = txt.isnull().sum(axis=1)>1
+    txt = txt.loc[~missing]
     print('time elapsed: ', (time.time() - s_ini)/60 , ' minutes')
     return txt
     
-
-txt = parse_dump_ir(path)
-a = txt.isnull().sum(axis=1)>1
-txt = txt.loc[~a]
-
-
-tenors = pd.Series(txt.Term.astype(int).unique())
 
 
 # =============================================================================
