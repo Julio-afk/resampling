@@ -22,9 +22,11 @@ diccionario = pd.read_csv(path_datos + 'diccionario/diccionario.csv')
 dump = dump.merge(diccionario, on= 'Term')
 dump['full_name'] = dump['Name'] +'_'+ dump['term_ymd']
 dump = dump.drop(['term_ymd', 'Name', 'Term'], axis='columns')
-dump = dump.pivot(index= 'Date', columns = 'full_name')
 
-dump = dump.pivot(index= 'Date', columns = 'full_name')
+
+#dump = dump.pivot(index= 'Date', columns = 'full_name')
+
+#dump = dump.pivot(index= 'Date', columns = 'full_name')
 a = dump.groupby(['full_name','Date']).count()
 
 

@@ -89,43 +89,46 @@ def parse_dump_others(path, kind):
         
     return df_final
 
-data_types = ['mk', 'eq', 'fx', 'com', 'iv']
-
-
-s = time.time()
-mk, eq, fx, com, iv = [parse_dump_others(path, x) for x in data_types]
-print('total time elapsed: ', (time.time()-s)/60, ' minutes')
-
-cols_na = ['moneyness_number', 'terms_validity_days_type']
-
-iv.loc[:,cols_na]  = iv.loc[:,cols_na].fillna(0).apply(lambda x: x.astype(float))
-
-path_to_save =  'C:/Users/e054040/Desktop/projects/data/20191018/dump/'
-
-def save_files(files, data_types, path):
-    path += 'parsed/'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    [x.to_csv(path + y + '.csv', index= False) for x,y in zip(files, data_types)]
-    return
-
-save_files([iv], ['iv'], path_to_save)
-
 # =============================================================================
-# pruebas
-i = parse_dump_others(path, 'iv')
-
-j = iv.iloc[:10000,:].pivot_table(index = ['Name', 'Moneyness', 'Underlying Term', 'Option Term'], columns = 'Date', values = 'Value')
+# data_types = ['mk', 'eq', 'fx', 'com', 'iv']
+# 
+# 
+# s = time.time()
+# mk, eq, fx, com, iv = [parse_dump_others(path, x) for x in data_types]
+# print('total time elapsed: ', (time.time()-s)/60, ' minutes')
+# 
+# cols_na = ['moneyness_number', 'terms_validity_days_type']
+# 
+# iv.loc[:,cols_na]  = iv.loc[:,cols_na].fillna(0).apply(lambda x: x.astype(float))
+# 
+# path_to_save =  'C:/Users/e054040/Desktop/projects/data/20191018/dump/'
+# 
+# def save_files(files, data_types, path):
+#     path += 'parsed/'
+#     if not os.path.exists(path):
+#         os.makedirs(path)
+#     [x.to_csv(path + y + '.csv', index= False) for x,y in zip(files, data_types)]
+#     return
+# 
+# save_files([iv], ['iv'], path_to_save)
+# 
+# # =============================================================================
+# # pruebas
+# i = parse_dump_others(path, 'iv')
+# 
+# j = iv.iloc[:10000,:].pivot_table(index = ['Name', 'Moneyness', 'Underlying Term', 'Option Term'], columns = 'Date', values = 'Value')
+# # =============================================================================
+# 
+# 
+# # =============================================================================
+# # modificando tipos de datos para ahorrar espacio
+# # =============================================================================
+# col_terms = ['Moneyness', 'Underlying Term', 'Option Term']
+# 
+# iv.loc[:,col_terms] = iv.loc[:,col_terms].apply(lambda x: x.astype(float))
+# 
+# mask = iv.Date >=  pd.to_datetime('2007-12-31')
+# 
+# 
+# 
 # =============================================================================
-
-
-# =============================================================================
-# modificando tipos de datos para ahorrar espacio
-# =============================================================================
-col_terms = ['Moneyness', 'Underlying Term', 'Option Term']
-
-iv.loc[:,col_terms] = iv.loc[:,col_terms].apply(lambda x: x.astype(float))
-
-mask = iv.Date >=  pd.to_datetime('2007-12-31')
-
-

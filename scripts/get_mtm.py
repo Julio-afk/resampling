@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+
 def get_mtm(nodo, TS, ST, TR):
     # TS = tree
     # ST = sensitivities_table
@@ -33,33 +34,38 @@ def get_mtm(nodo, TS, ST, TR):
 #     list_of_weight = list(var_each_factor, es_each_factor)
     ####################################################################################################
     return([mtm, sens_nodo_clean, TR_clean])
+    
 def get_ES(vector, probs=2.5):
     var = np.percentile(vector, probs)
-    ES =vector[vector<var].mean()
+    ES = vector[vector<var].mean()
     return ES
-def get_pf_sens(pf, trees, sensTable, inc_zeroes = False):
-    hojas = Getchild(trees, pf)
+
+
+def get_pf_sens(nodo, arbol, sensTable, inc_zeroes = False):
+    hojas = Getchild(arbol, nodo)
     if isinstance(hojas, str):
         hojas = [hojas]
-    ix0 = sensTable.index.isin(hojas)
-    if np.logical_and(len(hojas) > 0, len(ix0)>0):
-        ssl = sensTable.loc[sensTable.index.isin(hojas)].sum(axis=0)
+
+    if len(hojas) > 0:
+        ssl = sensTable.loc[sensTable.port.isin(hojas)]
+        ssl = ssl.groupby('rf').agg({'value':'sum'}).reset_index()
         if inc_zeroes:
             return ssl
         else:
-            return ssl.loc[ssl.abs() >1e-7].to_frame().T
-    else:
+            return ssl.loc[ssl.value.abs() >1e-6]
         return '0'
+    
+    
 def Getchild(tree , papa):
-    if any(tree.Parent==papa):
+    if any(tree.Portfolio==papa):
         leafs=[]
         def Getchild_(tree,papa,rec=0):
             if rec>=20:
                 return "Recursion level"
-            sons=list(tree.Child[tree.Parent==papa])
+            sons=list(tree.Instrument[tree.Portfolio==papa])
             for j in range(0,len(sons)):
-                if any(sons[j] == tree.Parent):
-                    Getchild_(tree,sons[j],rec+1)
+                if any(sons[j] == tree.Portfolio):
+                    Getchild_(tree, sons[j], rec+1)
                 else:
                     leafs.append(sons[j])
                     
