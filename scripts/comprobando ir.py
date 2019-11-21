@@ -15,7 +15,7 @@ from parse_dump import parse_dump_ir
 from parse_dump_others import parse_dump_others
 
 path_datos = 'C:/Users/e054040/Desktop/projects/data/resampling/'
-path = 'C:/Users/e054040/Desktop/projects/data/20191018/dump/TEPR_ASE_dump_RgoM_es_Thu.csv'
+path = 'C:/Users/e054040/Desktop/projects/data/20191113/dump/TEPR_ASE_dump_RgoM_es_Wed.csv'
 sens_nodo = pd.read_csv(path_datos + 'sens_nodo/sens_nodo_BBVA_SA.csv')
 
 days_vec = get_days_vector(path_datos)
@@ -27,7 +27,15 @@ dic  = pd.read_csv(path_datos + 'diccionario/diccionario.csv', dtype = {'Term':'
 dump_ir = dump_ir.merge(dic, on = 'Term', how='left')
 
 
-names = dump_ir['Name']+ '_' + dump_ir['term_ymd']
+
+path_nombres = 'C:/Users/e054040/Desktop/projects/data/20191113/names_match/'
+names = pd.read_csv(path_nombres + 'names_eqfxiv.csv', index_col=0, header = None, squeeze = True)
+# =============================================================================
+sens_nodo[['name', 'term']] = sens_nodo.rf.str.split(pat="_(?=[^_]+$)", expand=True)
+sens_nodo = sens_nodo.merge(dic, left_on = 'name', right_on = 'sens', how= 'left')
+sens_nodo.dump = sens_nodo.dump.fillna(sens_nodo.name)
+# =============================================================================
+names_ir = dump_ir['Name']+ '_' + dump_ir['term_ymd']
 
 ir = sens_nodo[sens_nodo.rf.str.startswith('IR_')]
 

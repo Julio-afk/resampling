@@ -27,7 +27,7 @@ def parse_portfolio_tree(path_datos):
 #    arbol.columns = ['Child', 'Parent']
     return arbol
 
-path_datos = 'C:/Users/e054040/Desktop/projects/data/20191018/'
+path_datos = 'C:/Users/e054040/Desktop/projects/data/20191113/'
 
 deltas = parse_sens(path_datos, 'delta')
 
@@ -51,5 +51,5 @@ arbol = parse_portfolio_tree(path_datos)
 
 sens = get_pf_sens('BBVA SA', arbol, sens)
 print('hola')
-
+sens.to_csv(path_datos + 'sens_nodo/sens_nodo_BBVA_SA.csv')
 
