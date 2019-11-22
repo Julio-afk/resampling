@@ -69,9 +69,11 @@ def parse_dump_ir(path):
     
     #from [[[]]] to [[]]
     txt = [x for v in txt for x in v]
-    
+#    time creating dataframe
+    s= time.time()
     txt = pd.DataFrame(txt)
-    
+    print('time creating df: ', time.time()-s)
+
     txt.columns = txt.iloc[0,:].tolist()
     txt.columns = txt.columns.str.replace(r'\(.*?\)', '')
         

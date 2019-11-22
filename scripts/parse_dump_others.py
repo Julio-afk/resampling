@@ -21,6 +21,7 @@ def create_df(factor_list,  col_names):
         'Moneyness':'moneyness_number',
         'Underlying Term':'terms_validity_days_type'
         }
+    col_names +=['FactorGroup', 'GroupName']
     
     txt = pd.DataFrame([x.split(',') for x in factor_list])
     txt.columns = txt.iloc[0,:].str.replace(r'\(.*?\)', '').tolist()
