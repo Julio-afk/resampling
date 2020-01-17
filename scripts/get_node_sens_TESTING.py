@@ -48,13 +48,6 @@ del deltas, vegas
 # Lectura de arbol de portfolios
 arbol = parse_portfolio_tree(path_datos)
  
-#Verificación si todas las hojas están contenidas en las tablas de sensibilidades
-#pd.Series(hojas)[~pd.Series(hojas).isin(sens.port)]
-#hojas = Getchild(arbol, 'BBVA SA')
-#sens = sens.loc[sens.port.isin(hojas)]
-#sens = sens.loc[sens.value.abs() >= 1e-6]
-#sens = sens.groupby('rf').agg({'value':'sum'}).reset_index()
-
 sens = get_pf_sens('BBVA SA', arbol, sens)
 print('hola')
 sens.to_csv(path_datos + 'sens_nodo/sens_nodo_BBVA_SA.csv')
@@ -62,7 +55,25 @@ sens.to_csv(path_datos + 'sens_nodo/sens_nodo_BBVA_SA.csv')
 fecha = '20191113'
 sens = create_dictionary(sens, fecha)
 
+#leemos y unimos dump
 path_dump = path_datos + 'dump/TEPR_ASE_dump_RgoM_es_Wed.csv'
+
+dump_ir = parse_dump_ir(path_dump, sens, path_datos)
+
+dump_iv = parse_dump_others(path_dump, sens,  'iv')
+dump_eq = parse_dump_others(path_dump, sens,  'mk')
+dump_fx = parse_dump_others(path_dump, sens,  'fx')
+
+dump = pd.concat([dump_ir,dump_iv, dump_eq, dump_fx])
+
+
+
+# =============================================================================
+# modificando por aqui, ya se incluyo lo de abajo en la funcion 'modify_dump_names'
+# =============================================================================
+
+
+
 #Parseamos dump ir y leemos diccionario
 dic  = pd.read_csv(path_datos + 'diccionario/diccionario.csv', dtype = {'Term':'float64', 'term_ymd':'str'})
 days_vec = get_days_vector(path_datos)

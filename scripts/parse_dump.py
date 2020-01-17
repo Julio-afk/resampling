@@ -10,6 +10,12 @@ import time
 import re
 from gc import collect
 
+import os
+path_scripts = 'C:/Users/e054040/Desktop/projects/resampling/scripts/'
+os.chdir(path_scripts)
+from get_days_vector import get_days_vector
+from modify_dump_names import modify_dump_names
+
 path = 'C:/Users/e054040/Desktop/projects/data/20191018/dump/TEPR_ASE_dump_RgoM_es_Thu.csv'
 #path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
 
@@ -31,8 +37,13 @@ def add_factor(factor_list, factor_name):
     txt = [[[x] + y for y in v] for x,v in zip(factor_name, factor_list)]
     return txt 
 
-def parse_dump_ir(path):
+def parse_dump_ir(path, sens, path_datos):
     s_ini = time.time()
+#    asset = sens.full_name.str.replace('_[0-9]{1,2}[A-Z]{1}$', '')
+    days_vec = get_days_vector(path_datos)
+    dic  = pd.read_csv(path_datos + 'diccionario/diccionario.csv', dtype = {'Term':'float64', 'term_ymd':'str'})
+   
+    
     input_file = open(path)
     text = input_file.readlines()
     s = time.time()
@@ -55,6 +66,9 @@ def parse_dump_ir(path):
     #Get name of risk factors
     s= time.time()
     nombres = [extract_name(x) for x in text]
+    #filter risk factors with sens on seelected node
+    text = [y for x,y in zip(nombres, text) if sens.full_name.str.contains(x).any()]
+    nombres = [x for x in nombres if sens.full_name.str.contains(x).any()]
     print('time extracting name: ', time.time()-s)
     
     #sub commas and splitting into list 
@@ -76,13 +90,16 @@ def parse_dump_ir(path):
 
     txt.columns = txt.iloc[0,:].tolist()
     txt.columns = txt.columns.str.replace(r'\(.*?\)', '')
-        
-    txt.Value = pd.to_numeric(txt.Value, errors = 'coerce')
-    txt.Term = pd.to_numeric(txt.Term, errors = 'coerce')
+    
+    txt.columns = ['Name', 'Date', 'Term','Value']
+    txt.Term = txt.Term = pd.to_numeric(txt.Term, errors = 'coerce')
     txt.Date = pd.to_datetime(txt.Date, errors = 'coerce')
+
+    txt = modify_dump_names(txt, sens, 'ir', days_vec, dic, path_datos)
+               
+    txt.Value = pd.to_numeric(txt.Value, errors = 'coerce')
     txt = txt.dropna(axis='index', how ='all')
     txt = txt.reset_index(drop=True)
-    txt.columns = ['Name', 'Date', 'Term','Value']
     
     missing = txt.isnull().sum(axis=1)>1
     txt = txt.loc[~missing]

@@ -9,19 +9,31 @@ import numpy as np
 import  time 
 from gc import collect
 import os 
+path_scripts = 'C:/Users/e054040/Desktop/projects/resampling/scripts/'
+os.chdir(path_scripts)
+from get_days_vector import get_days_vector
+from modify_dump_names import modify_dump_names
+from parse_dump import extract_name
 
 #path_casa = 'C:\projects\data\TEPR_ASE_dump_RgoM_es_Wed.csv'
 path = 'C:/Users/e054040/Desktop/projects/data/20191018/dump/TEPR_ASE_dump_RgoM_es_Thu.csv'
+path_datos = 'C:/Users/e054040/Desktop/projects/data/20191113/'
 
 
-def create_df(factor_list,  col_names):
+def create_df(factor_list,  col_names, sens, days_vec, dic, kind):
     
     cols_to_rename = {
         'Option Term':'options_terminal_id',
         'Moneyness':'moneyness_number',
         'Underlying Term':'terms_validity_days_type'
         }
-    col_names +=['FactorGroup', 'GroupName']
+#    col_names +=['FactorGroup', 'GroupName']
+    
+#    asset = sens.full_name.str.replace('_[0-9]{1,2}[A-Z]{1}$', '').str.replace('_[0-9]{1,2}[A-Z]{1}$', '')
+    name = extract_name(factor_list)
+    
+    if ~sens.full_name.str.contains(name).any():
+        return np.nan
     
     txt = pd.DataFrame([x.split(',') for x in factor_list])
     txt.columns = txt.iloc[0,:].str.replace(r'\(.*?\)', '').tolist()
@@ -35,9 +47,10 @@ def create_df(factor_list,  col_names):
     txt = txt.dropna(axis='index', how ='all')
     txt.Name = txt.Name.fillna(method  = 'ffill')
     txt = txt.reset_index(drop=True)
+    txt = modify_dump_names(txt, sens, kind, days_vec, dic, path_datos)
     return txt
 
-def parse_dump_others(path, kind):
+def parse_dump_others(path, sens,  kind):
     
     col_names = {
             'mk':['Name', 'Date', 'Value'], 
@@ -54,6 +67,9 @@ def parse_dump_others(path, kind):
             'com':'commodity_data',
             'iv':'iv_data'
                  }
+    
+    days_vec = get_days_vector(path_datos)
+    dic  = pd.read_csv(path_datos + 'diccionario/diccionario.csv', dtype = {'Term':'float64', 'term_ymd':'str'})
     
     col_names = col_names[kind]
     rf_type = rf_type[kind]
@@ -73,13 +89,14 @@ def parse_dump_others(path, kind):
     
     text_rf = [text[x] for x in slice_rf]
      
-    list_rfs = [create_df(x,  col_names) for x in text_rf]
+    list_rfs = [create_df(x, col_names, sens, days_vec, dic, kind) for x in text_rf]
+    list_rfs = [x for x in list_rfs if str(x) !='nan']
     
     del text_rf, chunks, text, input_file
     collect()
     
     df_final = pd.concat(list_rfs)
-    df_final.Name = df_final.Name.astype('category')
+    df_final.full_name = df_final.full_name.astype('category')
     
     #filter >= 2007-12-31
     mask = df_final.Date >=  pd.to_datetime('2007-12-31')
@@ -89,6 +106,9 @@ def parse_dump_others(path, kind):
     df_final.reset_index(inplace=True, drop=True)
         
     return df_final
+
+#parse_dump_others(path, sens,  kind)
+
 
 # =============================================================================
 # data_types = ['mk', 'eq', 'fx', 'com', 'iv']

@@ -36,6 +36,7 @@ def create_dictionary(sens_nodo, fecha):
     dic_cred = dic_cred.rename(columns={'factor':'sens_name'})
     dic_cred = dic_cred.drop_duplicates()
     
+    #creamos el diccionario de indices
     dic_index = sens_nodo.loc[sens_nodo.rf.str.contains(r'^[A-Z]{3}-', regex=True), ['rf']]
     dic_index = dic_index.rename(columns = {'rf':'sens_name_index'})
     dic_index['full_name_index'] = dic_index.sens_name_index.str.replace(r'^[A-Z]{3}-','EQX_')
@@ -43,7 +44,7 @@ def create_dictionary(sens_nodo, fecha):
     dic = dict_ir.append(dict_vegaeq).append(dic_cred)
     del dict_ir, dict_vegaeq, dic_cred
 
-
+    #filtramos los rfs parallel
     sens_nodo = sens_nodo.loc[~sens_nodo.rf.str.lower().str.contains('parallel')]
         
     sens_nodo[['name', 'term']] = sens_nodo.rf.str.split(pat="_(?=[^_]+$)", expand=True)
